@@ -68,18 +68,33 @@ app.use((req, res, next) => {
 // Chromium process with a capped JS heap fits; it is slower and one page at a time.
 const lowMemory = process.env.LOW_MEMORY === '1';
 
-const browserPromise = chromium.launch({
-  headless: true,
-  args: [
-    '--no-sandbox',
-    '--disable-dev-shm-usage',
-    '--disable-gpu',
-    '--disable-extensions',
-    ...(lowMemory
-      ? ['--single-process', '--no-zygote', '--js-flags=--max-old-space-size=192']
-      : []),
-  ],
-});
+// Chromium starts on the first session request, not at boot: a free 512 MB
+// instance must answer /healthz in seconds, and nothing else needs a browser.
+let browserPromise = null;
+
+const getBrowser = () => {
+  if (!browserPromise) {
+    browserPromise = chromium
+      .launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--disable-extensions',
+          ...(lowMemory
+            ? ['--single-process', '--no-zygote', '--js-flags=--max-old-space-size=192']
+            : []),
+        ],
+      })
+      .catch((error) => {
+        // Let the next request try again instead of caching a dead browser.
+        browserPromise = null;
+        throw error;
+      });
+  }
+  return browserPromise;
+};
 
 /** @type {Map<string, {context: any, page: any, lastUsed: number, timer: any}>} */
 const sessions = new Map();
@@ -126,7 +141,7 @@ app.post(
   guard(async (req, res) => {
     if (sessions.size >= MAX_SESSIONS) throw new Error('The worker is at session capacity. Try again shortly.');
     const startUrl = assertSafeUrl(req.body?.url ?? 'https://example.com');
-    const browser = await browserPromise;
+    const browser = await getBrowser();
     const context = await browser.newContext({
       viewport: { width: 1280, height: 800 },
       userAgent:
@@ -219,7 +234,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
 
 const shutdown = async () => {
   for (const id of [...sessions.keys()]) await destroy(id);
-  const browser = await browserPromise.catch(() => null);
+  const browser = await browserPromise?.catch(() => null);
   await browser?.close().catch(() => {});
   server.close(() => process.exit(0));
 };
