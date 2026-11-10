@@ -56,6 +56,9 @@ const app = express();
 app.use(express.json({ limit: '256kb' }));
 
 app.use((req, res, next) => {
+  // Render's health check arrives without credentials, so /healthz stays public.
+  if (req.path === '/healthz') return next();
+
   const auth = req.headers.authorization ?? '';
   if (auth !== `Bearer ${TOKEN}`) {
     res.status(401).json({ error: 'Unauthorised.' });
