@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "jobby-browser-worker",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "browser": {
+    "binding": "BROWSER"
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "SESSIONS", "class_name": "BrowserSessions" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["BrowserSessions"] }],
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "KEEP_ALIVE_MS": "300000",
+    "NAV_TIMEOUT_MS": "45000"
+  }
+}

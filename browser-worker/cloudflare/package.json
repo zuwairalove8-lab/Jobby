@@ -1,0 +1,18 @@
+{
+  "name": "jobby-browser-worker-cloudflare",
+  "private": true,
+  "version": "1.0.0",
+  "description": "JOBBY browser worker on Cloudflare Browser Run",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "dry-run": "wrangler deploy --dry-run --outdir dist"
+  },
+  "dependencies": {
+    "@cloudflare/playwright": "1.3.6"
+  },
+  "devDependencies": {
+    "wrangler": "4.159.0"
+  }
+}

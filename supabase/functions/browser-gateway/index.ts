@@ -234,7 +234,8 @@ async function callWorker(path: string, body: Record<string, unknown>): Promise<
     payload = {};
   }
   if (!res.ok) {
-    throw new Error(payload.error ?? `Browser worker responded ${res.status}.`);
+    // The worker sends a user-facing `message` alongside the raw `error`.
+    throw new Error(payload.message ?? payload.error ?? `Browser worker responded ${res.status}.`);
   }
   return payload;
 }
