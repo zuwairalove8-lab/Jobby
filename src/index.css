@@ -1,0 +1,211 @@
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+   JOBBY design tokens — a compact, high-contrast "Jarvis" dark UI.
+   Tailwind v4 reads @theme and generates utilities (bg-surface, text-muted...).
+--------------------------------------------------------------------------- */
+@theme {
+  --color-bg: #050a14;
+  --color-surface: #0d1525;
+  --color-raised: #111e33;
+  --color-line: #1b2c47;
+  --color-cyan: #00d4ff;
+  --color-violet: #7b61ff;
+  --color-ink: #e8f4ff;
+  --color-muted: #7a9cc0;
+  --color-good: #34e2b0;
+  --color-warn: #ffc75a;
+  --color-bad: #ff6b81;
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  --radius-xl2: 1.25rem;
+
+  --animate-pulse-slow: pulse 3.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+:root {
+  color-scheme: dark;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 600px at 12% -20%, rgba(0, 212, 255, 0.13), transparent 60%),
+    radial-gradient(900px 520px at 95% 0%, rgba(123, 97, 255, 0.13), transparent 55%),
+    var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+body::before {
+  /* very subtle grid, gives the shell depth without hurting contrast */
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(122, 156, 192, 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(122, 156, 192, 0.055) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(circle at 50% 0%, black, transparent 78%);
+  z-index: 0;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #24395a transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #24395a;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::selection {
+  background: rgba(0, 212, 255, 0.28);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-cyan);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@utility pb-safe {
+  padding-bottom: calc(var(--safe-bottom) + 0.5rem);
+}
+
+@utility pt-safe {
+  padding-top: calc(var(--safe-top) + 0.5rem);
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line/80 bg-surface/80 backdrop-blur-sm;
+  }
+
+  .hairline {
+    @apply border border-line/60;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-raised/70 px-2.5 py-1 text-[11px] font-medium tracking-wide text-muted;
+  }
+
+  .glow-cyan {
+    box-shadow:
+      0 0 0 1px rgba(0, 212, 255, 0.25),
+      0 10px 40px -12px rgba(0, 212, 255, 0.45);
+  }
+
+  .glow-violet {
+    box-shadow:
+      0 0 0 1px rgba(123, 97, 255, 0.28),
+      0 10px 40px -12px rgba(123, 97, 255, 0.5);
+  }
+
+  .prose-jobby {
+    @apply text-[15px] leading-relaxed text-ink/90;
+  }
+  .prose-jobby p {
+    @apply my-2;
+  }
+  .prose-jobby h1,
+  .prose-jobby h2,
+  .prose-jobby h3 {
+    @apply mt-4 mb-2 font-semibold text-ink;
+  }
+  .prose-jobby h1 {
+    @apply text-lg;
+  }
+  .prose-jobby h2 {
+    @apply text-base;
+  }
+  .prose-jobby h3 {
+    @apply text-sm uppercase tracking-wider text-muted;
+  }
+  .prose-jobby ul,
+  .prose-jobby ol {
+    @apply my-2 space-y-1 pl-5;
+  }
+  .prose-jobby ul {
+    @apply list-disc;
+  }
+  .prose-jobby ol {
+    @apply list-decimal;
+  }
+  .prose-jobby a {
+    @apply text-cyan underline decoration-cyan/40 underline-offset-2;
+  }
+  .prose-jobby code {
+    @apply rounded bg-bg/80 px-1.5 py-0.5 font-mono text-[13px] text-cyan;
+  }
+  .prose-jobby pre {
+    @apply my-3 overflow-x-auto rounded-xl border border-line bg-bg/90 p-3 text-[13px];
+  }
+  .prose-jobby pre code {
+    @apply bg-transparent p-0 text-ink/90;
+  }
+  .prose-jobby blockquote {
+    @apply my-3 border-l-2 border-violet/60 pl-3 text-muted;
+  }
+  .prose-jobby table {
+    @apply my-3 w-full border-collapse text-sm;
+  }
+  .prose-jobby th,
+  .prose-jobby td {
+    @apply border border-line/70 px-2 py-1 text-left;
+  }
+  .prose-jobby th {
+    @apply bg-raised/60 text-muted;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #101a2b 25%, #16233a 37%, #101a2b 63%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s linear infinite;
+}

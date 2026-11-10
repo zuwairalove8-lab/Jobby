@@ -1,0 +1,35 @@
+# Render blueprint for the JOBBY browser worker.
+#
+# Deploy: Render Dashboard → New → Blueprint → pick this repo.
+# Render reads this file, builds browser-worker/Dockerfile and gives you an
+# HTTPS URL like https://jobby-browser-worker.onrender.com.
+#
+# Then set, in Supabase → Edge Functions → Secrets:
+#   BROWSER_WORKER_URL   = that https:// URL (no trailing slash)
+#   BROWSER_WORKER_TOKEN = the same value as BROWSER_WORKER_TOKEN below
+#
+# Chromium is memory hungry; Render's free instance is 0.1 CPU / 512 MB and sleeps
+# after 15 minutes of inactivity (~30-60s cold start). The worker is tuned for
+# that: one session at a time and low-memory Chromium flags. For concurrent
+# sessions or faster starts, move to 1c-2g ($25/mo).
+services:
+  - type: web
+    name: jobby-browser-worker
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./browser-worker/Dockerfile
+    dockerContext: ./browser-worker
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: BROWSER_WORKER_TOKEN
+        sync: false # set in the Render dashboard, never commit it
+      - key: LOW_MEMORY
+        value: "1"
+      - key: MAX_SESSIONS
+        value: "1"
+      - key: SESSION_IDLE_MS
+        value: "300000"
+      - key: NAV_TIMEOUT_MS
+        value: "45000"

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">JOBBY</string>
+    <string name="title_activity_main">JOBBY</string>
+    <string name="package_name">com.jobby.app</string>
+    <string name="custom_url_scheme">com.jobby.app</string>
+</resources>
