@@ -67,8 +67,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// LOW_MEMORY=1 is for 512 MB free instances (Render free, small VPS). A single
-// Chromium process with a capped JS heap fits; it is slower and one page at a time.
+// LOW_MEMORY=1 is for 512 MB free instances (Render free, small VPS): no GPU, no
+// zygote helper and a capped renderer heap. --single-process is deliberately not
+// used, because it crashes the renderer as soon as a session is reused.
 const lowMemory = process.env.LOW_MEMORY === '1';
 
 // Chromium starts on the first session request, not at boot: a free 512 MB
@@ -85,10 +86,16 @@ const getBrowser = () => {
           '--disable-dev-shm-usage',
           '--disable-gpu',
           '--disable-extensions',
-          ...(lowMemory
-            ? ['--single-process', '--no-zygote', '--js-flags=--max-old-space-size=192']
-            : []),
+          ...(lowMemory ? ['--no-zygote', '--js-flags=--max-old-space-size=192'] : []),
         ],
+      })
+      .then((browser) => {
+        // A crashed browser would otherwise stay cached and fail every request.
+        browser.on('disconnected', () => {
+          browserPromise = null;
+          sessions.clear();
+        });
+        return browser;
       })
       .catch((error) => {
         // Let the next request try again instead of caching a dead browser.
