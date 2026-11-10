@@ -71,15 +71,26 @@ Deno.serve(async (req) => {
         return json({ error: 'The starting URL must use https://.' }, 400);
       }
       const existing = await activeSession(userId);
-      if (existing?.remote_session_id) {
+      const openRemote = () => callWorker('/sessions', { url: startUrl ?? 'https://example.com' });
+
+      // Let the worker replace what is open: a worker that reuses its browser can
+      // keep the warm tab, and one that cannot reports capacity below.
+      let remote: WorkerResponse;
+      try {
+        remote = await openRemote();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '';
+        if (!existing?.remote_session_id || !/capacity/i.test(message)) throw error;
         await closeRemote(existing.remote_session_id).catch(() => undefined);
+        remote = await openRemote();
+      }
+
+      if (existing) {
         await admin
           .from('browser_sessions')
           .update({ status: 'stopped' })
           .eq('id', existing.id);
       }
-
-      const remote = await callWorker('/sessions', { url: startUrl ?? 'https://example.com' });
       const { data: session, error } = await admin
         .from('browser_sessions')
         .insert({
