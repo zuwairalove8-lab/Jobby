@@ -35,6 +35,26 @@ Any container host with HTTPS ingress works (Fly.io, Render, Cloud Run, a VPS
 behind Caddy). Set `BROWSER_WORKER_URL` to that HTTPS origin and keep the token
 in a secret store only.
 
+### Live deployment (Render, free plan)
+
+| | |
+| --- | --- |
+| URL | `https://jobby-browser-worker.onrender.com` |
+| Service | `jobby-browser-worker` (`srv-dbpb0smtlv9c73f2pqsg`, Frankfurt, Docker, free) |
+| Source | branch `deploy/browser-worker`, `render.yaml` in this folder |
+| Vars | `BROWSER_WORKER_TOKEN`, `LOW_MEMORY=1`, `MAX_SESSIONS=1`, `SESSION_IDLE_MS=300000`, `NAV_TIMEOUT_MS=45000` |
+| Health | `GET /healthz` (public, no token) |
+
+The free instance has 512 MB and 0.1 CPU, so the worker runs one session at a
+time, drops `--single-process` (it crashed renderers), and starts Chromium on
+the first request rather than at boot. Render sleeps an idle service after 15
+minutes: the first request afterwards pays roughly a minute of cold start, so
+the first "Start session" in the app can take that long.
+
+Pushes to `deploy/browser-worker` auto-deploy. `/healthz` must stay public — a
+global bearer check in front of it makes Render's health probe fail and every
+deploy stalls before going live.
+
 ## Environment
 
 | Variable | Default | Purpose |
@@ -43,6 +63,8 @@ in a secret store only.
 | `BROWSER_WORKER_TOKEN` | — | Required shared secret (16+ chars) |
 | `SESSION_IDLE_MS` | `600000` | Idle session expiry |
 | `MAX_SESSIONS` | `8` | Concurrent contexts |
+| `LOW_MEMORY` | `0` | `1` trims Chromium for a ~512 MB instance |
+| `NAV_TIMEOUT_MS` | `30000` | Page navigation timeout |
 | `NAV_TIMEOUT_MS` | `30000` | Navigation timeout |
 
 ## API

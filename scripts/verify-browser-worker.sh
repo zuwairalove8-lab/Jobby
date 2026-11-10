@@ -31,8 +31,11 @@ curl -sS --max-time 120 -o /tmp/bw-session.json -w '   http=%{http_code}\n' \
 jq -r '{sessionId:(.sessionId//"none"), url:(.url//""), shotBytes:((.screenshot//"")|length), error:(.error//empty)}' /tmp/bw-session.json 2>/dev/null || head -c 300 /tmp/bw-session.json
 
 echo "3) worker rejects a wrong token (must be 401)"
+# /healthz is public on purpose (container health probes), so probe a protected route.
 curl -sS --max-time 30 -o /dev/null -w '   http=%{http_code}\n' \
-  -H "Authorization: Bearer not-the-real-token" "${URL}/healthz" || true
+  -X POST -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer not-the-real-token" \
+  -d '{"url":"https://example.com"}' "${URL}/sessions" || true
 
 echo "4) browser-gateway through Supabase (signed in as the probe user)"
 KEY=$(grep '^VITE_SUPABASE_ANON_KEY=' "$ROOT/.env" | cut -d= -f2)
